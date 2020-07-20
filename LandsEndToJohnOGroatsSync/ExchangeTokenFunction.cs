@@ -26,12 +26,14 @@ namespace LandsEndToJohnOGroatsSync
             ILogger log)
         {
             string code = req.Query["code"];
+            var pinbib = req.Query["pinbib"].ToString().Split(",") ?? new string[0];
+            var pin = pinbib.ElementAtOrDefault(0);
+            var bib = pinbib.ElementAtOrDefault(1);
 
-            if (string.IsNullOrEmpty(code))
+            if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(pin) || string.IsNullOrEmpty(bib))
             {
                 return new BadRequestResult();
             }
-
 
             var queryString = new Dictionary<string, string>();
             queryString.Add("client_id", Environment.GetEnvironmentVariable("strava_client_id"));
@@ -50,7 +52,8 @@ namespace LandsEndToJohnOGroatsSync
             var athleteTableEntity = await GetAthleteTableEntity(athletesTable, authTokenResponse.Athlete.Id)
                                         ?? new AthleteTableEntity { PartitionKey = authTokenResponse.Athlete.Id.ToString() };
 
-
+            athleteTableEntity.Pin = pin;
+            athleteTableEntity.Bib = bib;
             athleteTableEntity.AccessToken = authTokenResponse.AccessToken;
             athleteTableEntity.RefreshToken = authTokenResponse.RefreshToken;
             athleteTableEntity.AccessTokenExpiresAt = DateTimeOffset.FromUnixTimeSeconds(authTokenResponse.ExpiresAt);

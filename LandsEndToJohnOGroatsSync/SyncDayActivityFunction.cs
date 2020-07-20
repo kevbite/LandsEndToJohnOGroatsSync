@@ -14,7 +14,7 @@ namespace LandsEndToJohnOGroatsSync
     {
         [FunctionName("SyncDayActivityFunction")]
         public static async Task Run(
-            [QueueTrigger("sync-day")]SyncDayRequest request,
+            [QueueTrigger(QueueNames.SyncDay)]SyncDayRequest request,
             [Table(TableNames.AthletesTable, "{AthleteId}", "")] AthleteTableEntity athlete,
             [Table(TableNames.AthletesTable)] CloudTable athletesTable,
             [Table(TableNames.SyncedActivitiesTable)] CloudTable syncedActivitiesTable,

@@ -6,6 +6,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace LandsEndToJohnOGroatsSync
 {
@@ -98,6 +99,101 @@ namespace LandsEndToJohnOGroatsSync
             public string Lastname { get; set; }
         }
 
-       
+
+        public async Task<SummaryActivity[]> GetLoggedInAthleteActivities(IStravaAuthorization stravaAuthorization, long before, long after)
+        {
+            if (stravaAuthorization.AccessTokenExpiresAt >= DateTimeOffset.UtcNow)
+            {
+                stravaAuthorization = await RefreshAccessToken(stravaAuthorization);
+            }
+
+            using var httpResponseMessage1 = await SendLoggedInAthleteActivitiesRequest(stravaAuthorization, before, after);
+
+            string json;
+            if (httpResponseMessage1.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                stravaAuthorization = await RefreshAccessToken(stravaAuthorization);
+                using var httpResponseMessage2 = await SendLoggedInAthleteActivitiesRequest(stravaAuthorization, before, after); ;
+                httpResponseMessage2.EnsureSuccessStatusCode();
+                json = await httpResponseMessage2.Content.ReadAsStringAsync();
+            }
+            else
+            {
+                httpResponseMessage1.EnsureSuccessStatusCode();
+                json = await httpResponseMessage1.Content.ReadAsStringAsync();
+            }
+
+            return JsonSerializer.Deserialize<SummaryActivity[]>(json);
+        }
+
+        private async Task<HttpResponseMessage> SendLoggedInAthleteActivitiesRequest(IStravaAuthorization stravaAuthorization, long before, long after)
+        {
+
+            var queryString = new Dictionary<string, string>();
+            queryString.Add("before", before.ToString());
+            queryString.Add("after", after.ToString());
+
+            var url = QueryHelpers.AddQueryString("https://www.strava.com/api/v3/athlete/activities", queryString);
+
+            var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, url);
+            httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", stravaAuthorization.AccessToken);
+
+            return await _client.SendAsync(httpRequestMessage);
+        }
+
+        public class SummaryActivity
+        {
+            [JsonPropertyName("id")]
+            public long Id { get; set; }
+            [JsonPropertyName("distance")]
+            public float Distance { get; set; }
+
+            [JsonPropertyName("type")]
+            [JsonConverter(typeof(JsonStringEnumConverter))]
+            public ActivityType Type { get; set; }
+        }
+
+        public enum ActivityType
+        {
+            AlpineSki,
+            BackcountrySki,
+            Canoeing,
+            Crossfit,
+            EBikeRide,
+            Elliptical,
+            Golf,
+            Handcycle,
+            Hike,
+            IceSkate,
+            InlineSkate,
+            Kayaking,
+            Kitesurf,
+            NordicSki,
+            Ride,
+            RockClimbing,
+            RollerSki,
+            Rowing,
+            Run,
+            Sail,
+            Skateboard,
+            Snowboard,
+            Snowshoe,
+            Soccer,
+            StairStepper,
+            StandUpPaddling,
+            Surfing,
+            Swim,
+            Velomobile,
+            VirtualRide,
+            VirtualRun,
+            Walk,
+            WeightTraining,
+            Wheelchair,
+            Windsurf,
+            Workout,
+            Yoga
+        }
+
+
     }
 }

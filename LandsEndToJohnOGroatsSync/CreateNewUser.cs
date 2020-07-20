@@ -26,7 +26,7 @@ namespace LandsEndToJohnOGroatsSync
             queryString.Add("response_type", "code");
             queryString.Add("redirect_uri", $"http://localhost:7071/api/exchange_token");
             queryString.Add("approval_prompt", "force");
-            queryString.Add("scope", "read_all");
+            queryString.Add("scope", "read,activity:read_all");
 
             var url = QueryHelpers.AddQueryString("http://www.strava.com/oauth/authorize", queryString);
 

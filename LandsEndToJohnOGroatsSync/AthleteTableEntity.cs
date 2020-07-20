@@ -26,5 +26,7 @@ namespace LandsEndToJohnOGroatsSync
 
         public string Pin { get; set; }
         public string Bib { get; set; }
+
+        public int GetAthleteId() => int.Parse(PartitionKey);
     }
 }

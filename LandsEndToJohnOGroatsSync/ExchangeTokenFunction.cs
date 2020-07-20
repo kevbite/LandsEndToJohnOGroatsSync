@@ -21,7 +21,8 @@ namespace LandsEndToJohnOGroatsSync
         [FunctionName("ExchangeTokenFunction")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "exchange_token")] HttpRequest req,
-            [Table("Athletes")] CloudTable athletesTable,
+            [Table(TableNames.AthletesTable)] CloudTable athletesTable,
+            [Queue(QueueNames.RefreshAthletesDetails)] IAsyncCollector<RefreshAthletesDetailsRequest> refreshAthletesDetailsRequests,
             ILogger log)
         {
             string code = req.Query["code"];
@@ -49,10 +50,14 @@ namespace LandsEndToJohnOGroatsSync
             var athleteTableEntity = await GetAthleteTableEntity(athletesTable, authTokenResponse.Athlete.Id)
                                         ?? new AthleteTableEntity { PartitionKey = authTokenResponse.Athlete.Id.ToString() };
 
+
             athleteTableEntity.AccessToken = authTokenResponse.AccessToken;
             athleteTableEntity.RefreshToken = authTokenResponse.RefreshToken;
             athleteTableEntity.AccessTokenExpiresAt = DateTimeOffset.FromUnixTimeSeconds(authTokenResponse.ExpiresAt);
             await athletesTable.ExecuteAsync(TableOperation.InsertOrReplace(athleteTableEntity));
+
+            await refreshAthletesDetailsRequests.AddAsync(new RefreshAthletesDetailsRequest()
+                {AthleteId = authTokenResponse.Athlete.Id});
 
             return new OkObjectResult($@"Hello, {authTokenResponse.Athlete.Username}
 access_token: {authTokenResponse.AccessToken}

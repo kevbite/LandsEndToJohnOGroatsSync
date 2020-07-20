@@ -32,7 +32,7 @@ namespace LandsEndToJohnOGroatsSync
             var queryString = new Dictionary<string, string>();
             queryString.Add("client_id", Environment.GetEnvironmentVariable("strava_client_id"));
             queryString.Add("response_type", "code");
-            queryString.Add("redirect_uri", $"http://localhost:7071/api/exchange_token?pinbib={pin},{bib}");
+            queryString.Add("redirect_uri", $"{req.Scheme}://{req.Host}/api/exchange_token?pinbib={pin},{bib}");
             queryString.Add("approval_prompt", "force");
             queryString.Add("scope", "read,activity:read_all");
 

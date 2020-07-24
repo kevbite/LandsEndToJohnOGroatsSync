@@ -25,7 +25,7 @@ namespace LandsEndToJohnOGroatsSync
             var date = request.DateTime.Date;
             var before = new DateTimeOffset(date.AddDays(1)).ToUnixTimeSeconds();
             var after = new DateTimeOffset(date).ToUnixTimeSeconds();
-
+            
             var activities = await client.GetLoggedInAthleteActivities(athlete, before, after);
 
             var types = athlete.TypesToSync.Split(",").Select(Enum.Parse<LittleStravaClient.ActivityType>).ToArray();

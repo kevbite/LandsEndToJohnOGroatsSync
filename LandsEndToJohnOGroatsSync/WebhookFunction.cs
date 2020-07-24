@@ -26,8 +26,8 @@ namespace LandsEndToJohnOGroatsSync
             {
                 var message = new ActivityUpdatedMessage
                 {
-                    AthleteId = data.ObjectId,
-                    ActivityId = data.OwnerId
+                    AthleteId = data.OwnerId,
+                    ActivityId = data.ObjectId
                 };
 
                 await activitiesUpdated.AddAsync(message);
@@ -57,7 +57,7 @@ namespace LandsEndToJohnOGroatsSync
             [JsonPropertyName("event_time")]
             public int EventTime { get; set; }
             [JsonPropertyName("object_id")]
-            public int ObjectId { get; set; }
+            public long ObjectId { get; set; }
             [JsonPropertyName("object_type")]
             [JsonConverter(typeof(JsonStringEnumConverter))]
             public ObjectType ObjectType { get; set; }

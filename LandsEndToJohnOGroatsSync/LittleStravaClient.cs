@@ -141,6 +141,51 @@ namespace LandsEndToJohnOGroatsSync
             return await _client.SendAsync(httpRequestMessage);
         }
 
+        public async Task<DetailedActivity> GetActivityById(IStravaAuthorization stravaAuthorization, long activityId)
+        {
+            if (stravaAuthorization.AccessTokenExpiresAt >= DateTimeOffset.UtcNow)
+            {
+                stravaAuthorization = await RefreshAccessToken(stravaAuthorization);
+            }
+
+            using var httpResponseMessage1 = await SendActivityByIdRequest(stravaAuthorization, activityId);
+
+            string json;
+            if (httpResponseMessage1.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                stravaAuthorization = await RefreshAccessToken(stravaAuthorization);
+                using var httpResponseMessage2 = await SendActivityByIdRequest(stravaAuthorization, activityId); ;
+                httpResponseMessage2.EnsureSuccessStatusCode();
+                json = await httpResponseMessage2.Content.ReadAsStringAsync();
+            }
+            else
+            {
+                httpResponseMessage1.EnsureSuccessStatusCode();
+                json = await httpResponseMessage1.Content.ReadAsStringAsync();
+            }
+
+            return JsonSerializer.Deserialize<DetailedActivity>(json);
+        }
+
+        private async Task<HttpResponseMessage> SendActivityByIdRequest(IStravaAuthorization stravaAuthorization, long activityId)
+        {
+            var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, $"https://www.strava.com/api/v3/activities/{activityId}");
+            httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", stravaAuthorization.AccessToken);
+
+            return await _client.SendAsync(httpRequestMessage);
+        }
+
+        public class DetailedActivity
+        {
+            [JsonPropertyName("id")]
+            public long Id { get; set; }
+
+            [JsonPropertyName("start_date")]
+            public DateTimeOffset StartDate { get; set; }
+        }
+
+
+
         public class SummaryActivity
         {
             [JsonPropertyName("id")]

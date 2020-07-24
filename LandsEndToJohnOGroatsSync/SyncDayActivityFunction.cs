@@ -20,7 +20,6 @@ namespace LandsEndToJohnOGroatsSync
             [Table(TableNames.SyncedActivitiesTable)] CloudTable syncedActivitiesTable,
             ILogger log)
         {
-
             var client = new LittleStravaClient();
 
             var date = request.DateTime.Date;

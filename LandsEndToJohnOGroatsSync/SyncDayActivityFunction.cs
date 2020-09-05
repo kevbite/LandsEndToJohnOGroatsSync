@@ -34,26 +34,29 @@ namespace LandsEndToJohnOGroatsSync
                 .ToArray();
 
             var totalDaysMiles = activitiesToSync.Sum(x => x.Miles);
-
-            var landsEnd3FireBaseAppClient = new LandsEnd3FireBaseAppClient();
-            await landsEnd3FireBaseAppClient.SubmitData(athlete, date, totalDaysMiles);
-
-            var tableBatchOperation = new TableBatchOperation();
-            foreach (var sycnedActivity in activitiesToSync)
+            
+            if (totalDaysMiles > 0)
             {
-                tableBatchOperation.InsertOrReplace(new SyncedActivitiesTableEntity
+                var landsEnd3FireBaseAppClient = new LandsEnd3FireBaseAppClient();
+                await landsEnd3FireBaseAppClient.SubmitData(athlete, date, totalDaysMiles);
+
+                var tableBatchOperation = new TableBatchOperation();
+                foreach (var sycnedActivity in activitiesToSync)
                 {
-                    PartitionKey = request.AthleteId.ToString(),
-                    RowKey = sycnedActivity.Id.ToString(),
-                    ActivityType = sycnedActivity.Type.ToString(),
-                    Meters = sycnedActivity.Meters,
-                    Miles = sycnedActivity.Miles,
-                });
-            }
+                    tableBatchOperation.InsertOrReplace(new SyncedActivitiesTableEntity
+                    {
+                        PartitionKey = request.AthleteId.ToString(),
+                        RowKey = sycnedActivity.Id.ToString(),
+                        ActivityType = sycnedActivity.Type.ToString(),
+                        Meters = sycnedActivity.Meters,
+                        Miles = sycnedActivity.Miles,
+                    });
+                }
 
-            if (tableBatchOperation.Any())
-            {
-                syncedActivitiesTable.ExecuteBatch(tableBatchOperation);
+                if (tableBatchOperation.Any())
+                {
+                    syncedActivitiesTable.ExecuteBatch(tableBatchOperation);
+                }
             }
 
             await athletesTable.ExecuteAsync(TableOperation.InsertOrReplace(athlete));
